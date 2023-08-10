@@ -58,6 +58,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const phone = phoneInput.value;
     const bookingdata = { age, name, phone };
 
+    if (age === '' || name === '' || phone === '') {
+      alert('Please fill in all required fields.');
+      return; // Stop form submission
+    }
+
     addBookingToServer(bookingdata); // Add booking to the server
     ageInput.value = "";
     nameInput.value = "";
