@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const bookingForm = document.getElementById("bookForm");
+  const bookingForm = document.getElementById("bookingForm");
   const ageInput = document.getElementById("age");
   const nameInput = document.getElementById("name");
   const phoneInput = document.getElementById("phone");
@@ -29,18 +29,25 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderbooking(bookingdata) {
     const item = document.createElement("div");
     item.innerHTML = `
-            <p>Age: ${bookingdata.age}</p>
-            <p>Name: ${bookingdata.name}</p>
-            <p>Phone: ${bookingdata.phone}</p>
-            <button class="delete-button" data-id="${bookingdata._id}">Delete</button>
-        `;
+    <p>Age: ${bookingdata.age}</p>
+    <p>Name: ${bookingdata.name}</p>
+    <p>Phone: ${bookingdata.phone}</p>
+    <button class="edit-button" data-id="${bookingdata._id}">Edit</button>
+    <button class="delete-button" data-id="${bookingdata._id}">Delete</button>
+  `;
     bookingList.appendChild(item);
+
+    const editButton = item.querySelector(".edit-button");
+    editButton.addEventListener("click", () => {
+      populateFormForEdit(bookingdata);
+    });
 
     const deleteButton = item.querySelector(".delete-button");
     deleteButton.addEventListener("click", () => {
-      deleteBooking(bookingdata._id, item); // Pass the item to be removed
+      deleteBooking(bookingdata._id, item);
     });
   }
+
   function addBookingToServer(bookingdata) {
     // Replace with your actual API endpoint
     const apiUrl =
@@ -54,6 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch((error) => {
         console.error("Error adding bookings:", error);
       });
+  }
+
+  function populateFormForEdit(bookingdata) {
+    ageInput.value = bookingdata.age;
+    nameInput.value = bookingdata.name;
+    phoneInput.value = bookingdata.phone;
+    // Store the booking ID for editing
+    bookingForm.setAttribute("data-edit-id", bookingdata._id);
   }
 
   function deleteBooking(bookingId, element) {
@@ -74,23 +89,50 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  function editBooking(bookingId, updatedData) {
+    const apiUrl = `https://crudcrud.com/api/354757e353ce4a75bca0b8791aeba740/bookingList/${bookingId}`;
+
+    axios
+      .put(apiUrl, updatedData)
+      .then(() => {
+        console.log("Booking updated successfully");
+        renderbookings(); // Refresh the booking list
+      })
+      .catch((error) => {
+        console.error("Error updating booking:", error);
+      });
+  }
+
   bookingForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const age = ageInput.value;
     const name = nameInput.value;
     const phone = phoneInput.value;
-    const bookingdata = { age, name, phone };
+
     if (age === "" || name === "" || phone === "") {
       alert("Please fill in all required fields.");
-      return; // Stop form submission
+      return;
     }
 
-    addBookingToServer(bookingdata); // Add booking to the server
+    const bookingId = bookingForm.getAttribute("data-edit-id");
+    if (bookingId) {
+      // Editing an existing booking
+      editBooking(bookingId, { age, name, phone });
+    } else {
+      // Adding a new booking
+      addBookingToServer({ age, name, phone });
+    }
+
+    // Clear form fields
     ageInput.value = "";
     nameInput.value = "";
-    phoneInput.value = ""; // Clear phone input as well
+    phoneInput.value = "";
+
+    // Reset form state
+    bookingForm.removeAttribute("data-edit-id");
   });
 
   renderbookings(); // Render initial bookings when the page loads
 });
+
 
